@@ -15,13 +15,13 @@ class WaitingForBiteState(BotState):
         pos = self.detector.find(screen, "exclamation", debug=self.bot.debug_mode)
 
         if pos:
-            self.bot.log("[WAITING_FOR_BITE] ❗ Peixe fisgado!")
+            self.bot.log("[WAITING_FOR_BITE] ❗ Fish hooked!")
             self.controller.mouse_down('left')
             return StateType.PLAYING_MINIGAME
         else:
             current_time = time.time()
             if current_time - self._last_wait_log > 5:
-                self.bot.log("[WAITING_FOR_BITE] ⏳ Aguardando peixe...")
+                self.bot.log("[WAITING_FOR_BITE] ⏳ Waiting for fish...")
                 self._last_wait_log = current_time
 
             return StateType.WAITING_FOR_BITE

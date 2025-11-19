@@ -46,10 +46,12 @@ class FishingBot:
         self.state_machine.add_state(StateType.FINISHING, FinishingState(self))
 
     def start(self):
-        log("[INFO] 🎣 Bot pronto!")
-        log("[INFO] ⚠️ IMPORTANTE: Mantenha o jogo em FOCO (janela ativa)")
-        log(f"[INFO] ⚙️ Precisão: {self.config.bot.detection.precision * 100:.0f}%")
-        log(f"[INFO] ⚙️ FPS alvo: {'MAX' if self.config.bot.target_fps == 0 else self.config.bot.target_fps}")
+        log("[INFO] 🎣 Bot ready!")
+        log("[INFO] ⚠️ IMPORTANT: Keep the game in FOCUS (active window)")
+        log(f"[INFO] ⚙️ Accuracy: {self.config.bot.detection.precision * 100:.0f}%")
+        log(f"[INFO] ⚙️ Target FPS: {'MAX' if self.config.bot.target_fps == 0 else self.config.bot.target_fps}")
+        log("[INFO] ⚠️ Warming up detection system...")
+        time.sleep(1)  # Allows enough time for the screen capture components to initialize
         self.state_machine.set_state(StateType.STARTING)
 
     def update(self):
@@ -68,14 +70,20 @@ class FishingBot:
                 time.sleep(sleep_time)
 
     def stop(self):
+        # Always show stats once
+        if not getattr(self, "_stats_shown", False):
+            self.stats.show()
+            self._stats_shown = True
+
+        # Proceed with shutdown only once
         if not self._stopped:
-            self.log("[BOT] 🛑 Encerrando o bot...")
+            self.log("[BOT] 🛑 Shutting down the bot...")
             self._stopped = True
+
             try:
                 self.controller.release_all_controls()
             except Exception as e:
-                self.log(f"[ERRO] Falha ao liberar controles: {e}")
-            self.stats.show()
+                self.log(f"[ERROR] Failed to release controls: {e}")
 
     def is_stopped(self):
         return self._stopped

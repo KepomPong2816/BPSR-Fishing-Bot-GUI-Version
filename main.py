@@ -11,7 +11,7 @@ def main():
 
     bot.start()
 
-    log("[INFO] Pressione F1 para iniciar o bot.")
+    log("[INFO] Press '7' to start the bot.")
 
     while not bot.is_stopped():
         if not hotkeys.paused:
@@ -19,7 +19,7 @@ def main():
 
         time.sleep(0.1)
 
-    log("[INFO] Bot Finalizado.")
+    log("[INFO] Bot finished.")
 
 
 if __name__ == "__main__":

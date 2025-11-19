@@ -11,33 +11,33 @@ class Hotkeys:
         self._register_hotkeys()
 
     def _register_hotkeys(self):
-        keyboard.add_hotkey('f1', self._toggle_pause)
-        keyboard.add_hotkey('f2', self._stop)
-        keyboard.add_hotkey('f3', self._toggle_visualizer)
-        log("[INFO] ✅ Hotkeys registradas: F1 (Pausar/Continuar), F2 (Sair), F3 (Visualizador de ROI)")
+        keyboard.add_hotkey('7', self._toggle_pause)
+        keyboard.add_hotkey('8', self._stop)
+        keyboard.add_hotkey('9', self._toggle_visualizer)
+        log("[INFO] ✅ Hotkeys registered: '7' (Pause/Resume), '8' (Exit), '9' (ROI Visualizer)")
 
     def _toggle_pause(self):
         self.paused = not self.paused
-        status = "PAUSADO" if self.paused else "EM EXECUÇÃO"
+        status = "PAUSED" if self.paused else "RUNNING"
         log(f"[HOTKEY] Bot {status}.")
 
     def _stop(self):
-        log("[HOTKEY] Parando o bot...")
+        log("[HOTKEY] Stopping the bot...")
         if self.visualizer_process and self.visualizer_process.is_alive():
             self.visualizer_process.terminate()
         self.bot.stop()
 
     def _toggle_visualizer(self):
         if self.visualizer_process and self.visualizer_process.is_alive():
-            log("[HOTKEY] Fechando o visualizador de ROI.")
+            log("[HOTKEY] Closing the ROI visualizer.")
             self.visualizer_process.terminate()
             self.visualizer_process = None
         else:
-            log("[HOTKEY] Abrindo o visualizador de ROI.")
-            # Executa o visualizador em um processo separado para não bloquear a UI principal
+            log("[HOTKEY] Opening the ROI visualizer.")
+            # Runs the visualizer in a separate process so it doesn’t block the main UI
             self.visualizer_process = multiprocessing.Process(target=show_roi_visualizer, daemon=True)
             self.visualizer_process.start()
 
     def wait_for_exit(self):
-        """Mantém o script em execução até que a hotkey de saída seja pressionada."""
-        keyboard.wait('f2')
+        """Keeps the script running until the exit hotkey is pressed."""
+        keyboard.wait('8')

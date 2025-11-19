@@ -12,19 +12,20 @@ class BotConfig:
             "CHECKING_ROD": 15,
             "CASTING_BAIT": 15,
             "WAITING_FOR_BITE": 25,
-            "PLAYING_MINIGAME": 40,
+            "PLAYING_MINIGAME": 30,
             "FINISHING": 10
         }
 
-        # Habilitar finalização rápida após o minigame
+        # Enable quick finish after the minigame
         self.quick_finish_enabled = False
 
         self.debug_mode = False
 
-        # FPS alvo (capturas por segundo)
-        # 0 significa sem limite
+        # Target FPS (frames per second)
+        # 0 means unlimited
         self.target_fps = 0
 
-        # Delays (em segundos)
-        self.default_delay = 1.0
-        self.finish_wait_delay = 1.5
+        # Delays (in seconds)
+        self.default_delay = 0.5
+        self.finish_wait_delay = 0.5
+        self.casting_delay = 0.5

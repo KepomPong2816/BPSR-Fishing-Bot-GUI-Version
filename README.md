@@ -38,7 +38,7 @@ An automated and open-source fishing bot built in Python. It uses image detectio
 *   **Fully Automated Fishing:** Casts the line, detects a bite, and starts the minigame.
 *   **Smart Minigame Player:** Autonomously plays the fishing minigame, moving left and right as needed.
 *   **Automatic Rod Swapping:** Detects when the fishing rod breaks and replaces it with a new one, allowing for uninterrupted fishing sessions.
-*   **Hotkey Control:** Easily start, pause, resume, and stop the bot using hotkeys (F1 and F2).
+*   **Hotkey Control:** Easily start, pause, resume, and stop the bot using hotkeys ('7' and '8' keys).
 *   **Flexible Configuration:** Allows for easy adjustment of detection precision, regions of interest (ROI), and wait times through dedicated configuration files.
 *   **Robust Architecture:** Built with a state machine and solid design principles, making the code easy to understand and extend.
 
@@ -49,7 +49,7 @@ An automated and open-source fishing bot built in Python. It uses image detectio
 ### 1. Prerequisites
 
 *   **Python 3.8+**
-*   The game configured to run in windowed mode at **1920x1080** resolution.
+*   The game configured to run in full-screen mode at **1920x1080** resolution.
 
 ### 2. Installation
 
@@ -67,11 +67,12 @@ An automated and open-source fishing bot built in Python. It uses image detectio
 ### 3. How to Run
 
 1.  Open the game and make sure it is visible on the screen.
+2.  Be at a fishing location. Either stand on an interactable fishing spot or already in the fishing UI.
 2.  Run the bot from the project's root folder:
     ```bash
     python main.py
     ```
-3.  The bot will be ready. Press **F1** to start/pause and **F2** to stop the bot at any time.
+3.  The bot will be ready. Press **7** key to start/pause and **8** key in-game or in the terminal to stop the bot at any time.
 
 ---
 
@@ -87,6 +88,12 @@ This section lists common issues you might encounter and how to solve them.
     1.  **Take a new screenshot** of the failed image (e.g., the broken rod icon).
     2.  **Replace the corresponding template file** in the `src/fishbot/assets/templates/` folder.
     3.  If the problem persists, try **adjusting the `precision` value** in the `src/fishbot/config/detection_config.py` file. Lowering the value (e.g., from `0.8` to `0.7`) can help compensate for minor visual differences.
+
+### Character won't resume fishing after a timeout state
+
+*   **Symptom:** Something unexpected occurred (like fish escaped) and the bot has escaped the fishing UI and won't start again.
+*   **Cause:** When the bot escapes it tries to re-enter the fishing UI by interacting with the fishing spot. Because some spots move the player after interacting with the fishing spot, the bot idly tries to interact when nothing is there. Bot also does not support a search to find the nearest one.
+*   **Solution:** Move your character over to an interactable fishing spot to resume the bot.
 
 ---
 
@@ -110,6 +117,7 @@ General bot settings.
 *   `state_timeouts`: Maximum time the bot can remain in each state before resetting.
 *   `target_fps`: Target frames per second for screen captures (0 for unlimited).
 *   `default_delay`: Default delays between actions.
+*   `casting_delay`: Delay right before casting a bait. 
 
 ---
 

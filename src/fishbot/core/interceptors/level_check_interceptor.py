@@ -8,8 +8,8 @@ class LevelCheckInterceptor(BaseInterceptor):
     def check(self, screen):
 
         if self.detector.find(screen, "level_check"):
-            self.bot.log("[GUARD RAIL 1] ⚠️  UI de 'Level Check' detectada!")
-            self.bot.log("[GUARD RAIL 1] Resetando para o estado de checagem de vara.")
+            self.bot.log("[GUARD RAIL 1] ⚠️ 'Level Check' UI detected!")
+            self.bot.log("[GUARD RAIL 1] Resetting to rod-checking state.")
 
             self.controller.release_all_controls()
 

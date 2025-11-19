@@ -21,15 +21,15 @@ class StateMachine:
             return
 
         if new_state_name not in self.states:
-            log(f"[ERRO] Tentativa de mudar para estado desconhecido: {new_state_name}")
+            log(f"[ERROR] Attempted to switch to unknown state: {new_state_name}")
             return
 
         if self.current_state_name is None:
-            log(f"[INFO] Iniciando máquina de estados em: {new_state_name.name}")
+            log(f"[INFO] Starting state machine in: {new_state_name.name}")
         elif new_state_name != self.current_state_name:
-            log(f"[INFO] Mudando de estado: {self.current_state_name.name} -> {new_state_name.name}")
+            log(f"[INFO] Changing state: {self.current_state_name.name} -> {new_state_name.name}")
         elif force:
-            log(f"[INFO] Forçando reset do estado: {new_state_name.name}")
+            log(f"[INFO] Forcing state reset: {new_state_name.name}")
 
         self.current_state_name = new_state_name
         self.current_state = self.states[self.current_state_name]
@@ -42,8 +42,8 @@ class StateMachine:
 
         elapsed_time = time.time() - self.state_start_time
         if elapsed_time > timeout_limit:
-            log(f"[TIMEOUT] 🚨 Estado '{self.current_state_name.name}' excedeu {timeout_limit}s!")
-            log("[TIMEOUT] 🚨 Soltando controles e pressionando 'ESC' para resetar.")
+            log(f"[TIMEOUT] 🚨 State '{self.current_state_name.name}' exceeded {timeout_limit}s!")
+            log("[TIMEOUT] 🚨 Releasing controls and pressing 'ESC' to reset.")
 
             self.bot.controller.release_all_controls()
             self.bot.controller.press_key('esc')

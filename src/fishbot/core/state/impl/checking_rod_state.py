@@ -7,12 +7,12 @@ from ..state_type import StateType
 class CheckingRodState(BotState):
 
     def handle(self, screen):
-        self.bot.log("[CHECKING_ROD] Verificando vara...")
+        self.bot.log("[CHECKING_ROD] Checking rod...")
 
         time.sleep(1)
 
         if self.detector.find(screen, "broken_rod"):
-            self.bot.log("[CHECKING_ROD] ⚠️  Vara quebrada! Trocando...")
+            self.bot.log("[CHECKING_ROD] ⚠️  Broken rod! Replacing...")
             self.bot.stats.increment('rod_breaks')
             time.sleep(1)
 
@@ -26,9 +26,9 @@ class CheckingRodState(BotState):
             self.controller.click('left')
             time.sleep(1)
 
-            self.bot.log("[CHECKING_ROD] ✅ Vara trocada")
+            self.bot.log("[CHECKING_ROD] ✅ Rod replaced")
         else:
             time.sleep(1)
-            self.bot.log("[CHECKING_ROD] ✅ Vara OK")
+            self.bot.log("[CHECKING_ROD] ✅ Rod OK")
 
         return StateType.CASTING_BAIT

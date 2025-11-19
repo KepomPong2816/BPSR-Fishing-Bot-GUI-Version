@@ -19,27 +19,27 @@ class PlayingMinigameState(BotState):
 
         if self.detector.find(screen, arrow_template):
             if self._current_direction is None:
-                self.bot.log(f"[MINIGAME] ▶️ Movendo para a {direction} (Segurando '{key_to_press}')")
+                self.bot.log(f"[MINIGAME] ▶️ Moving to the {direction} (Holding '{key_to_press}')")
                 self.controller.key_down(key_to_press)
                 self._current_direction = direction
                 time.sleep(self.switch_delay)
 
             if self._current_direction == opposite_direction:
-                self.bot.log(f"[MINIGAME] ◀️ Trocando para a {direction} (Soltando '{key_to_release}')")
+                self.bot.log(f"[MINIGAME] ◀️ Switching to the {direction} (Releasing '{key_to_release}')")
                 self.controller.key_up(key_to_release)
                 self._current_direction = None
                 time.sleep(self.switch_delay)
 
     def handle(self, screen):
         if self.detector.find(screen, "success"):
-            self.bot.log("[MINIGAME] 🐟 Peixe capturado!")
+            self.bot.log("[MINIGAME] 🐟 Fish caught!")
             self.bot.stats.increment('fish_caught')
 
             self.controller.release_all_controls()
             self._current_direction = None
 
             if self.config.quick_finish_enabled:
-                self.bot.log("[MINIGAME] ⏩ Finalizando rapidamente...")
+                self.bot.log("[MINIGAME] ⏩ Quick finishing...")
                 self.controller.press_key('esc')
                 time.sleep(0.5)
                 return StateType.STARTING

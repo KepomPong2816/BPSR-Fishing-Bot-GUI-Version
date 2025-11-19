@@ -38,7 +38,7 @@ Um bot de pesca automatizado e de código aberto, construído em Python. Ele uti
 *   **Pesca Totalmente Automatizada:** Lança a isca, detecta a fisgada e inicia o minigame.
 *   **Minigame Player Inteligente:** Joga o minigame de forma autônoma, movendo para a esquerda e para a direita conforme necessário.
 *   **Troca Automática de Vara:** Detecta quando a vara de pescar quebra e a substitui por uma nova, permitindo sessões de pesca ininterruptas.
-*   **Controle por Hotkeys:** Inicie, pause, retome e encerre o bot facilmente usando teclas de atalho (F1 e F2).
+*   **Controle por Hotkeys:** Inicie, pause, retome e encerre o bot facilmente usando teclas de atalho (**7** para iniciar/pausar e **8** para parar).
 *   **Configuração Flexível:** Permite ajustar facilmente a precisão da detecção, as regiões de interesse (ROI) e os tempos de espera através de arquivos de configuração dedicados.
 *   **Arquitetura Robusta:** Construído com uma máquina de estados e princípios de design sólidos, tornando o código fácil de entender e estender.
 
@@ -49,7 +49,7 @@ Um bot de pesca automatizado e de código aberto, construído em Python. Ele uti
 ### 1. Pré-requisitos
 
 *   **Python 3.8+**
-*   O jogo configurado para rodar em modo janela na resolução **1920x1080**.
+*   O jogo configurado para rodar em modo tela cheia na resolução **1920x1080**.
 
 ### 2. Instalação
 
@@ -67,26 +67,37 @@ Um bot de pesca automatizado e de código aberto, construído em Python. Ele uti
 ### 3. Como Executar
 
 1.  Abra o jogo e certifique-se de que ele esteja visível na tela.
-2.  Execute o bot a partir da pasta raiz do projeto:
+2.  Esteja em um ponto de pesca. Pode ser um local interativo de pesca ou já na interface de pesca.
+3.  Execute o bot a partir da pasta raiz do projeto:
     ```bash
     python main.py
     ```
-3.  O bot estará pronto. Pressione **F1** para iniciar/pausar e **F2** para encerrar o bot a qualquer momento.
+4.  O bot estará pronto. Pressione **7** para iniciar/pausar e **8** para encerrar o bot a qualquer momento.
 
 ---
 
 ## Problemas Conhecidos e Soluções
 
-Esta seção lista problemas comuns que você pode encontrar e como resolvê-los.
-
 ### A detecção de um item (ex: vara quebrada, fisgada) para de funcionar
 
 *   **Sintoma:** O bot para de reagir a um evento específico que antes funcionava, como não trocar a vara quebrada ou não detectar a fisgada.
-*   **Causa Provável:** O jogo pode ter recebido uma pequena atualização visual, alterando a aparência do ícone ou da imagem que o bot procura.
+*   **Causa Provável:** O jogo pode ter recebido uma atualização visual, alterando a aparência do ícone ou da imagem que o bot procura.
 *   **Solução:**
     1.  **Tire uma nova captura de tela** da imagem que falhou (ex: o ícone da vara quebrada).
     2.  **Substitua o arquivo de template** correspondente na pasta `src/fishbot/assets/templates/`.
     3.  Se o problema persistir, tente **ajustar o valor de `precision`** no arquivo `src/fishbot/config/detection_config.py`. Diminuir o valor (ex: de `0.8` para `0.7`) pode ajudar a compensar pequenas diferenças visuais.
+
+### Personagem não retoma a pesca após timeout
+
+*   **Sintoma:** Algo inesperado ocorreu (como peixe escapou) e o bot saiu da interface de pesca e não reinicia.
+*   **Causa:** O bot tenta reentrar na interface de pesca interagindo com o ponto de pesca. Alguns pontos podem mover o personagem após a interação. Atualmente não há busca automática do ponto mais próximo.
+*   **Solução:** Mova seu personagem para um ponto de pesca interativo para retomar o bot.
+
+### Iscas e varas acabaram
+
+*   **Sintoma:** O bot entra em loop de timeout devido à falta de iscas ou varas.
+*   **Causa:** O bot não suporta comprar itens automaticamente.
+*   **Solução:** Compre manualmente iscas e varas em quantidade suficiente.
 
 ---
 
@@ -110,6 +121,7 @@ Configurações gerais do bot.
 *   `state_timeouts`: Tempo máximo que o bot pode permanecer em cada estado antes de resetar.
 *   `target_fps`: Limite de capturas de tela por segundo (0 para ilimitado).
 *   `default_delay`: Pausas padrão entre as ações.
+*   `casting_delay`: Pausa aplicada imediatamente antes de lançar a isca.  
 
 ---
 
@@ -122,7 +134,7 @@ O bot utiliza uma **Máquina de Estados Finitos (FSM)** para gerenciar seu fluxo
 *   **`main.py`**: Ponto de entrada que inicializa e executa o bot.
 *   **`src/fishbot/core/state/`**: Contém a lógica da máquina de estados.
     *   `state_machine.py`: Gerencia o estado atual e as transições.
-    *   `impl/`: Abriga as classes para cada estado concreto (`CheckingRodState`, `PlayingMinigameState`, etc.), onde cada uma implementa uma única responsabilidade.
+    *   `impl/`: Abriga as classes para cada estado concreto (`CheckingRodState`, `PlayingMinigameState`, etc.), cada uma com responsabilidade única.
 *   **`src/fishbot/core/game/`**: Módulos que interagem diretamente com o jogo.
     *   `detector.py`: Responsável pela captura de tela e detecção de templates usando `mss` e `OpenCV`.
     *   `controller.py`: Simula entradas de teclado e mouse.

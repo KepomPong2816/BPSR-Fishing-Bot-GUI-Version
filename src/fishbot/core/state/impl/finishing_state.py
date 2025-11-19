@@ -14,12 +14,15 @@ class FinishingState(BotState):
         pos = self.detector.find(screen, "continue")
 
         if pos:
-            self.bot.log("[FINISHING] 🖱️  Clicando em 'Continue'...")
+            self.bot.log("[FINISHING] 🖱️ Clicking 'Continue'...")
             self.controller.move_to(pos[0], pos[1])
             time.sleep(0.5)
             self.controller.move_to(pos[0], pos[1])
             time.sleep(1)
             self.controller.click('left')
+		
+	    # Count one full fishing attempt
+            self.bot.stats.increment("cycles")
 
             return StateType.CHECKING_ROD
 

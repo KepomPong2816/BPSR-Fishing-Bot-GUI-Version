@@ -6,8 +6,8 @@ from src.fishbot.utils.logger import log
 try:
     import mss
 except ImportError:
-    log("[ERRO] ❌ Biblioteca MSS não encontrada! Instale com: pip install mss")
-    log("[ERRO] O bot não pode funcionar sem o MSS.")
+    log("[ERROR] ❌ MSS library not found! Install with: pip install mss")
+    log("[ERROR] The bot cannot run without MSS.")
     exit(1)
 
 
@@ -28,18 +28,18 @@ class Detector:
 
     def _load_templates(self):
         loaded = {}
-        log("[INFO] 📦 Carregando templates...")
+        log("[INFO] 📦 Loading templates...")
         for name in self.detection_config.templates:
             path = self.unified_config.get_template_path(name)
             if not (path and path.exists()):
-                log(f"[INFO] ❌ {name} - não encontrado em '{path}'")
+                log(f"[INFO] ❌ {name} - not found at '{path}'")
                 continue
 
             img = cv.imread(str(path), cv.IMREAD_UNCHANGED)
             template_img, mask = None, None
 
             if img.shape[2] == 4:
-                log(f"[INFO] ✅ {name} (com máscara de transparência)")
+                log(f"[INFO] ✅ {name} (with transparency mask)")
                 mask = img[:, :, 3]
                 template_img = cv.cvtColor(img, cv.COLOR_BGRA2BGR)
             else:
@@ -52,7 +52,7 @@ class Detector:
     def capture_screen(self):
         if self.sct is None:
             self.sct = mss.mss()
-            log("[INFO] ✅ MSS inicializado na thread do bot")
+            log("[INFO] ✅ MSS initialized in bot thread")
 
         screenshot = self.sct.grab(self.monitor)
         img = np.array(screenshot)
@@ -103,7 +103,7 @@ class Detector:
 
     def find(self, screen, template_name, debug=False):
         if template_name not in self.templates:
-            log(f"[INFO] ❌ Template '{template_name}' não foi carregado.")
+            log(f"[INFO] ❌ Template '{template_name}' was not loaded.")
             return None
 
         template_data = self.templates[template_name]
@@ -120,7 +120,7 @@ class Detector:
 
         if debug:
             status = 'MATCH' if is_match else 'NO MATCH'
-            log(f"[DEBUG] [{template_name}] Confiança: {confidence:.2%} (precisa: {precision:.0%}) -> {status}")
+            log(f"[DEBUG] [{template_name}] Confidence: {confidence:.2%} (required: {precision:.0%}) -> {status}")
 
         if is_match:
             return self._calculate_center(location, template_img.shape[:2], offset)

@@ -13,9 +13,9 @@ class StatsTracker:
 
     def show(self):
         print("\n" + "=" * 50)
-        print("📊 ESTATÍSTICAS")
+        print("📊 STATISTICS")
         print("=" * 50)
         for stat, value in self.stats.items():
-            title = stat.replace('_', ' ').replace('cycles', 'Ciclos completados').capitalize()
+            title = stat.replace('_', ' ').replace('cycles', 'Cycles completed').capitalize()
             print(f"  {title}: {value}")
         print("=" * 50)

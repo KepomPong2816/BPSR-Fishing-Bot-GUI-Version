@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtGui import QPainter, QColor, QPen, QFont
 from PyQt6.QtCore import Qt, QRect
 
-# Importa as configurações de detecção do seu projeto
+# Imports detection settings from your project
 from src.fishbot.config.detection_config import DetectionConfig
 
 class RoiVisualizer(QWidget):
@@ -51,8 +51,8 @@ class RoiVisualizer(QWidget):
             self.close()
 
 def main():
-    print("Iniciando visualizador de ROIs (PyQt)...")
-    print("Pressione a tecla 'Esc' para fechar a janela.")
+    print("Starting ROI visualizer (PyQt)...")
+    print("Press the 'Esc' key to close the window.")
     
     app = QApplication(sys.argv)
     visualizer = RoiVisualizer()
