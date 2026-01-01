@@ -11,7 +11,15 @@ class CheckingRodState(BotState):
 
         time.sleep(1)
 
-        if self.detector.find(screen, "broken_rod"):
+        found_rod = 0
+
+        if self.detector.find(screen, "reg_rod", 5, debug=True):
+            found_rod = 1
+
+        if found_rod == 0 and self.detector.find(screen, "sturdy_rod", 5, debug=True):
+            found_rod = 1
+               
+        if found_rod == 0:
             self.bot.log("[CHECKING_ROD] ⚠️  Broken rod! Replacing...")
             self.bot.stats.increment('rod_breaks')
             time.sleep(1)
@@ -19,9 +27,9 @@ class CheckingRodState(BotState):
             self.controller.press_key('m')
             time.sleep(1)
 
-            self.controller.move_to(1650, 580)
+            self.controller.move_to(1650, 600)
             time.sleep(0.5)
-            self.controller.move_to(1650, 580)
+            self.controller.move_to(1650, 600)
             time.sleep(0.5)
             self.controller.click('left')
             time.sleep(1)

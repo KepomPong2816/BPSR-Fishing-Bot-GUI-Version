@@ -31,10 +31,21 @@ class PlayingMinigameState(BotState):
                 time.sleep(self.switch_delay)
 
     def handle(self, screen):
-        if self.detector.find(screen, "success"):
+        fish_complete = 0
+        failed = 0
+
+        if self.detector.find(screen, "success", 1, debug=False):
+            fish_complete = 1
             self.bot.log("[MINIGAME] 🐟 Fish caught!")
             self.bot.stats.increment('fish_caught')
 
+        if fish_complete == 0 and self.detector.find(screen, "failure", 1, debug=False):
+            fish_complete = 1
+            failed = 1
+            self.bot.log("[MINIGAME] 🐟 Fish got away!")
+            self.bot.stats.increment('fish_escaped')            
+            
+        if fish_complete == 1:
             self.controller.release_all_controls()
             self._current_direction = None
 
@@ -44,7 +55,11 @@ class PlayingMinigameState(BotState):
                 time.sleep(0.5)
                 return StateType.STARTING
             else:
-                return StateType.FINISHING
+                if failed == 0:
+                    return StateType.FINISHING
+                else:
+                    time.sleep(2)
+                    return StateType.CHECKING_ROD
 
         self._handle_arrow('left', screen)
         self._handle_arrow('right', screen)

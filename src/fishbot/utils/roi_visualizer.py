@@ -6,11 +6,13 @@ from PyQt6.QtCore import Qt, QRect
 
 # Imports detection settings from your project
 from src.fishbot.config.detection_config import DetectionConfig
+from src.fishbot.config.screen_config import ScreenConfig
 
 class RoiVisualizer(QWidget):
     def __init__(self):
         super().__init__()
         self.detection_config = DetectionConfig()
+        self.screen_config = ScreenConfig()
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -35,6 +37,8 @@ class RoiVisualizer(QWidget):
                 continue
 
             x, y, w, h = roi
+            x = x + self.screen_config.monitor_x
+            y = y + self.screen_config.monitor_y
             color = colors[color_index % len(colors)]
             color_index += 1
 
