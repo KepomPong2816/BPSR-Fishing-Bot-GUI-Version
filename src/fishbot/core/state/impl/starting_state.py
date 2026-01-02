@@ -14,6 +14,19 @@ class StartingState(BotState):
     def handle(self, screen):
         # self._count = self._count + 1
 
+        if self.detector.find(screen, "connect_server", 5, debug=self.bot.debug_mode):
+            x = 1100 + self.window.monitor_x
+            y = 795 + self.window.monitor_y
+
+            self.controller.move_to(x, y)
+            time.sleep(0.5)
+            self.controller.move_to(x, y)
+            time.sleep(0.5)
+            self.controller.click('left')
+            time.sleep(1)
+
+            self.bot.log("[RECONNECT] ✅ confirm server connection")
+
         # 1️⃣ Normal case: detect the fishing spot button
         pos = self.detector.find(screen, "fishing_spot_btn", 5, debug=self.bot.debug_mode)
 
@@ -33,8 +46,8 @@ class StartingState(BotState):
 
         if already_fishing:
             self.bot.log("[STARTING] 🎣 Already in fishing mode — skipping interaction")
-            return StateType.CHECKING_ROD
-
+            return StateType.CHECKING_ROD      
+        
         # 3️⃣ Fallback: still searching for fishing spot
         current_time = time.time()
         if current_time - self._last_search_log > 2:

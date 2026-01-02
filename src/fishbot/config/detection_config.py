@@ -19,7 +19,8 @@ class DetectionConfig:
             "failure": "fish_escaped.png",
             "success": "success.png",
             "continue": "continue.png",
-            "level_check": "level_check.png"
+            "level_check": "level_check.png",
+            "connect_server": "connect.png"
         }
 
         # General Resolutions Config, But Slow Response Time
@@ -40,7 +41,7 @@ class DetectionConfig:
             "fishing_spot_btn": (1400, 540, 121, 55),
             "broken_rod": (1635, 982, 250, 63),
             "reg_rod": (1638, 985, 210, 33),
-            "sturdy_rod": (1637, 986, 194, 37),
+            "sturdy_rod": (1638, 985, 194, 37),
             "new_rod": (1624, 563, 185, 65),
             "exclamation": (929, 438, 52, 142),
             "left_arrow": (740, 490, 220, 100),
@@ -48,5 +49,6 @@ class DetectionConfig:
             "failure": (973, 630, 702, 101),
             "success": (710, 620, 570, 130),
             "continue": (1439, 942, 306, 75),
-            "level_check": (1101, 985, 48, 29)
+            "level_check": (1101, 985, 48, 29),
+            "connect_server": (1057, 763, 279, 67),
         }
