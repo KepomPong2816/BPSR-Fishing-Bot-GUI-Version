@@ -10,7 +10,6 @@ except ImportError:
     log("[ERROR] The bot cannot run without MSS.")
     exit(1)
 
-
 class Detector:
     def __init__(self, config):
         self.unified_config = config
@@ -28,7 +27,7 @@ class Detector:
 
     def _load_templates(self):
         loaded = {}
-        log("[INFO] 📦 Loading templates...")
+        log("[INFO] Loading templates...")
         for name in self.detection_config.templates:
             path = self.unified_config.get_template_path(name)
             if not (path and path.exists()):
@@ -50,30 +49,13 @@ class Detector:
         return loaded
     
     def _generate_concentric_square_pixels(self, center_x, center_y, max_radius):
-        """
-        Generates x, y pixel coordinates for the perimeters of concentric squares.
-
-        Args:
-            center_x (int): The x-coordinate of the center.
-            center_y (int): The y-coordinate of the center.
-            max_radius (int): The radius of the largest square from the center.
-
-        Yields:
-            tuple: (x, y) coordinates for each pixel on the squares.
-        """
-        # Iterate for each square size, starting from a small radius up to max_radius
         for r in range(1, max_radius + 1):
-            # Coordinates for the four sides of the square
-            # Top side: x from center_x-r to center_x+r, y fixed at center_y-r
             for x in range(center_x - r, center_x + r + 1):
                 yield x, center_y - r
-            # Bottom side: x from center_x-r to center_x+r, y fixed at center_y+r
             for x in range(center_x - r, center_x + r + 1):
                 yield x, center_y + r
-            # Left side: x fixed at center_x-r, y from center_y-r+1 to center_y+r-1
             for y in range(center_y - r + 1, center_y + r):
                 yield center_x - r, y
-            # Right side: x fixed at center_x+r, y from center_y-r+1 to center_y+r-1
             for y in range(center_y - r + 1, center_y + r):
                 yield center_x + r, y
 
@@ -84,7 +66,16 @@ class Detector:
 
         screenshot = self.sct.grab(self.monitor)
         img = np.array(screenshot)
-        return cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        
+        if img is None or img.size == 0:
+            log(f"[ERROR] Captured empty screen! Monitor: {self.monitor}")
+            return None
+            
+        try:
+            return cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        except cv.error as e:
+            log(f"[ERROR] cvtColor failed: {e}. Shape: {img.shape}")
+            return None
 
     def _check_xy(self, search_area, x, y, template_data, template_img, template_name, debug):
         confidence, location = self._perform_match(search_area, template_data)
@@ -170,24 +161,3 @@ class Detector:
             return None
         
         return self._get_search_area(screen, template_name, radius, debug)
-
-        # template_data = self.templates[template_name]
-        # template_img, _ = template_data
-
-        # search_area, offset = self._get_search_area(screen, template_name)
-        # confidence, location = self._perform_match(search_area, template_data)
-
-        # if confidence is None:
-        #     return None
-
-        # precision = self.detection_config.precision
-        # is_match = confidence >= precision
-
-        # if debug:
-        #     status = 'MATCH' if is_match else 'NO MATCH'
-        #     log(f"[DEBUG] [{template_name}] Confidence: {confidence:.2%} (required: {precision:.0%}) -> {status}")
-
-        # if is_match:
-        #     return self._calculate_center(location, template_img.shape[:2], offset)
-
-        # return None

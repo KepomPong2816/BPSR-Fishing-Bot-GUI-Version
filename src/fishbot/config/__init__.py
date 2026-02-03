@@ -4,8 +4,12 @@ from .paths import PACKAGE_ROOT, ASSETS_PATH, TEMPLATES_PATH
 
 class Config:
 
-    def __init__(self):
-        self.bot = BotConfig()
+    def __init__(self, window_mode: str = 'Auto Detect', custom_width: int = 1920, custom_height: int = 1080):
+        self.bot = BotConfig(
+            window_mode=window_mode,
+            custom_width=custom_width,
+            custom_height=custom_height
+        )
 
         self.paths = {
             'package_root': PACKAGE_ROOT,

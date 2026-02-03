@@ -13,8 +13,8 @@ class Hotkeys:
     def _register_hotkeys(self):
         keyboard.add_hotkey('7', self._toggle_pause)
         keyboard.add_hotkey('8', self._stop)
-        keyboard.add_hotkey('9', self._toggle_visualizer)
-        log("[INFO] ✅ Hotkeys registered: '7' (Pause/Resume), '8' (Exit), '9' (ROI Visualizer)")
+        keyboard.add_hotkey('0', self._toggle_visualizer)
+        log("[INFO] Hotkeys registered: '7' (Pause/Resume), '8' (Exit), '0' (HUD Visualizer)")
 
     def _toggle_pause(self):
         self.paused = not self.paused
@@ -29,15 +29,13 @@ class Hotkeys:
 
     def _toggle_visualizer(self):
         if self.visualizer_process and self.visualizer_process.is_alive():
-            log("[HOTKEY] Closing the ROI visualizer.")
+            log("[HOTKEY] Closing the HUD visualizer.")
             self.visualizer_process.terminate()
             self.visualizer_process = None
         else:
-            log("[HOTKEY] Opening the ROI visualizer.")
-            # Runs the visualizer in a separate process so it doesn’t block the main UI
+            log("[HOTKEY] Opening the HUD visualizer.")
             self.visualizer_process = multiprocessing.Process(target=show_roi_visualizer, daemon=True)
             self.visualizer_process.start()
 
     def wait_for_exit(self):
-        """Keeps the script running until the exit hotkey is pressed."""
         keyboard.wait('8')

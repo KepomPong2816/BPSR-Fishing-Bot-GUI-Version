@@ -2,30 +2,30 @@ from .screen_config import ScreenConfig
 from .detection_config import DetectionConfig
 
 class BotConfig:
-    def __init__(self):
-
-        self.screen = ScreenConfig()
+    def __init__(self, window_mode: str = 'Auto Detect', custom_width: int = 1920, custom_height: int = 1080):
         self.detection = DetectionConfig()
+        
+        self.screen = ScreenConfig(
+            detection_config=self.detection,
+            window_mode=window_mode,
+            custom_width=custom_width,
+            custom_height=custom_height
+        )
 
         self.state_timeouts = {
-            "STARTING": 10,
-            "CHECKING_ROD": 15,
-            "CASTING_BAIT": 15,
-            "WAITING_FOR_BITE": 25,
-            "PLAYING_MINIGAME": 30,
-            "FINISHING": 10
+            "STARTING": 8,
+            "CHECKING_ROD": 13,
+            "CASTING_BAIT": 13,
+            "WAITING_FOR_BITE": 23,
+            "PLAYING_MINIGAME": 28,
+            "FINISHING": 8
         }
 
-        # Enable quick finish after the minigame
         self.quick_finish_enabled = False
-
         self.debug_mode = False
 
-        # Target FPS (frames per second)
-        # 0 means unlimited
-        self.target_fps = 0
+        self.target_fps = 60
 
-        # Delays (in seconds)
-        self.default_delay = 0.5
-        self.finish_wait_delay = 0.5
-        self.casting_delay = 0.5
+        self.default_delay = 0.3
+        self.finish_wait_delay = 0.3
+        self.casting_delay = 0.3

@@ -1,8 +1,6 @@
 import time
 
 from src.fishbot.utils.logger import log
-from .state_type import StateType
-
 
 class StateMachine:
     def __init__(self, bot):
@@ -39,20 +37,6 @@ class StateMachine:
         timeout_limit = self.config.state_timeouts.get(self.current_state_name.name)
         if not timeout_limit:
             return False
-
-        elapsed_time = time.time() - self.state_start_time
-        if elapsed_time > timeout_limit:
-            log(f"[TIMEOUT] 🚨 State '{self.current_state_name.name}' exceeded {timeout_limit}s!")
-            log("[TIMEOUT] 🚨 Releasing controls and pressing 'ESC' to reset.")
-
-            self.bot.controller.release_all_controls()
-            self.bot.controller.press_key('esc')
-            time.sleep(0.5)
-
-            self.bot.stats.increment('timeouts')
-            self.set_state(StateType.STARTING, force=True)
-            return True
-        return False
 
     def handle(self, screen):
         if self._check_state_timeout():

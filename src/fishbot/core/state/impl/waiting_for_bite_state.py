@@ -5,7 +5,6 @@ from ..state_type import StateType
 
 
 class WaitingForBiteState(BotState):
-
     def __init__(self, bot):
         super().__init__(bot)
         self._last_wait_log = 0

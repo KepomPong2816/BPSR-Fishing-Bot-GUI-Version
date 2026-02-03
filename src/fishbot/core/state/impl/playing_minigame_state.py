@@ -61,6 +61,20 @@ class PlayingMinigameState(BotState):
                     time.sleep(2)
                     return StateType.CHECKING_ROD
 
+        if self.detector.find(screen, "continue", 5, debug=False):
+            self.bot.log("[MINIGAME] 🎯 Continue button detected (instant catch)")
+            self.controller.release_all_controls()
+            self._current_direction = None
+            self.bot.stats.increment('fish_caught')
+            
+            if self.config.quick_finish_enabled:
+                self.bot.log("[MINIGAME] ⏩ Quick finishing...")
+                self.controller.press_key('esc')
+                time.sleep(0.5)
+                return StateType.STARTING
+            else:
+                return StateType.FINISHING
+
         self._handle_arrow('left', screen)
         self._handle_arrow('right', screen)
 

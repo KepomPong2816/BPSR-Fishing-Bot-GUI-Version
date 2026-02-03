@@ -17,8 +17,12 @@ from src.fishbot.utils.logger import log
 
 
 class FishingBot:
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, window_mode: str = 'Auto Detect', custom_width: int = 1920, custom_height: int = 1080):
+        self.config = Config(
+            window_mode=window_mode,
+            custom_width=custom_width,
+            custom_height=custom_height
+        )
         self.stats = StatsTracker()
         self.log = log
 
@@ -30,6 +34,8 @@ class FishingBot:
 
         self._stopped = False
         self.debug_mode = self.config.bot.debug_mode
+        
+        self.controller.set_debug(self.debug_mode)
 
         self.target_delay = 0
         if self.config.bot.target_fps > 0:
@@ -47,11 +53,13 @@ class FishingBot:
 
     def start(self):
         log("[INFO] 🎣 Bot ready!")
-        log("[INFO] ⚠️ IMPORTANT: Keep the game in FOCUS (active window)")
-        log(f"[INFO] ⚙️ Accuracy: {self.config.bot.detection.precision * 100:.0f}%")
-        log(f"[INFO] ⚙️ Target FPS: {'MAX' if self.config.bot.target_fps == 0 else self.config.bot.target_fps}")
-        log("[INFO] ⚠️ Warming up detection system...")
-        time.sleep(1)  # Allows enough time for the screen capture components to initialize
+        log("[INFO] IMPORTANT: Keep the game in FOCUS (active window)")
+        log("[INFO] CREDIT: https://github.com/hyuse98/BPSR-Fishing-Bot")
+        log("[INFO] MODIFIED: https://github.com/KepomPong2816")
+        log(f"[INFO] Accuracy: {self.config.bot.detection.precision * 100:.0f}%")
+        log(f"[INFO] Target FPS: {'MAX' if self.config.bot.target_fps == 0 else self.config.bot.target_fps}")
+        log("[INFO] Warming up detection system...")
+        time.sleep(1)
         self.state_machine.set_state(StateType.STARTING)
 
     def update(self):
@@ -61,6 +69,9 @@ class FishingBot:
         loop_start = time.time()
 
         screen = self.detector.capture_screen()
+        if screen is None:
+            return
+
         self.state_machine.handle(screen)
 
         if self.target_delay > 0:
@@ -70,12 +81,10 @@ class FishingBot:
                 time.sleep(sleep_time)
 
     def stop(self):
-        # Always show stats once
         if not getattr(self, "_stats_shown", False):
             self.stats.show()
             self._stats_shown = True
 
-        # Proceed with shutdown only once
         if not self._stopped:
             self.log("[BOT] 🛑 Shutting down the bot...")
             self._stopped = True
