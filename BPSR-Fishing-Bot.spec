@@ -1,15 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""
-PyInstaller spec file for BPSR Fishing Bot GUI.
-This creates a standalone Windows executable.
-"""
 
 import os
 import sys
 
 block_cipher = None
 
-# Get the project root directory
 project_root = os.path.dirname(os.path.abspath(SPEC))
 
 a = Analysis(
@@ -17,9 +12,7 @@ a = Analysis(
     pathex=[project_root],
     binaries=[],
     datas=[
-        # Include template images
         ('src/fishbot/assets/templates', 'src/fishbot/assets/templates'),
-        # Include mascot for splash screen
         ('maskot.png', '.'),
         ('maskot2.png', '.'),
     ],
@@ -43,7 +36,10 @@ a = Analysis(
         'matplotlib',
         'pandas',
         'scipy',
-        'numpy.random', # Often heavy if not needed
+        'numpy.random._examples',
+        'numpy.tests',
+        'numpy.f2py',
+        'numpy.distutils',
         'notebook',
         'IPython',
         'unittest',
@@ -51,10 +47,55 @@ a = Analysis(
         'pdb',
         'distutils',
         'setuptools',
-        'xml', # If not parsing XML
-        'sqlite3', # If not using DB
+        'xml',
+        'xmlrpc',
+        'sqlite3',
         'email',
-        'http', # If no web requests
+        'http',
+        'html',
+        'ftplib',
+        'urllib',
+        'PyQt6.QtBluetooth',
+        'PyQt6.QtDBus',
+        'PyQt6.QtDesigner',
+        'PyQt6.QtHelp',
+        'PyQt6.QtMultimedia',
+        'PyQt6.QtMultimediaWidgets',
+        'PyQt6.QtNetwork',
+        'PyQt6.QtNetworkAuth',
+        'PyQt6.QtNfc',
+        'PyQt6.QtOpenGL',
+        'PyQt6.QtOpenGLWidgets',
+        'PyQt6.QtPositioning',
+        'PyQt6.QtPrintSupport',
+        'PyQt6.QtQml',
+        'PyQt6.QtQuick',
+        'PyQt6.QtQuick3D',
+        'PyQt6.QtQuickWidgets',
+        'PyQt6.QtRemoteObjects',
+        'PyQt6.QtSensors',
+        'PyQt6.QtSerialPort',
+        'PyQt6.QtSpatialAudio',
+        'PyQt6.QtSql',
+        'PyQt6.QtSvg',
+        'PyQt6.QtSvgWidgets',
+        'PyQt6.QtTest',
+        'PyQt6.QtTextToSpeech',
+        'PyQt6.QtWebChannel',
+        'PyQt6.QtWebEngine',
+        'PyQt6.QtWebEngineCore',
+        'PyQt6.QtWebEngineWidgets',
+        'PyQt6.QtWebSockets',
+        'PyQt6.QtXml',
+        'PyQt6.Qt3DAnimation',
+        'PyQt6.Qt3DCore',
+        'PyQt6.Qt3DExtras',
+        'PyQt6.Qt3DInput',
+        'PyQt6.Qt3DLogic',
+        'PyQt6.Qt3DRender',
+        'PyQt6.QtPdf',
+        'PyQt6.QtPdfWidgets',
+        'cv2.data',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -74,16 +115,16 @@ exe = EXE(
     name='Pelanggan Glenn Itu Lagi v4',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # No console window (GUI app)
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    uac_admin=True,  # Request administrator privileges
+    uac_admin=True,
     icon='app_icon.ico',
 )

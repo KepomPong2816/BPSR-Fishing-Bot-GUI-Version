@@ -1,7 +1,17 @@
+# Core GUI Framework
+PyQt6~=6.10.0
 pyqt6-sip
-pywinctl
-opencv-python~=4.12.0.88
+
+# Computer Vision
+opencv-python-headless~=4.12.0.88
+numpy
+
+# Screen Capture
 mss~=10.1.0
+
+# Input Control
 PyAutoGUI~=0.9.54
 keyboard~=0.13.5
-PyQt6~=6.10.0
+
+# Window Management
+pywinctl

@@ -312,7 +312,6 @@ class MainWindow(QMainWindow):
         QMetaObject.invokeMethod(self.stop_button, "click", Qt.ConnectionType.QueuedConnection)
     
     def _on_hotkey_visualizer(self):
-        """Open ROI Editor via hotkey."""
         if not self._hotkeys_enabled:
             return
         
@@ -320,7 +319,6 @@ class MainWindow(QMainWindow):
         QMetaObject.invokeMethod(self, "_open_roi_editor", Qt.ConnectionType.QueuedConnection)
     
     def _open_settings(self):
-        """Open settings dialog."""
         dialog = SettingsDialog(self, self._settings)
         if dialog.exec():
             old_hotkeys = self._settings.get('hotkeys_enabled', True)
@@ -335,14 +333,12 @@ class MainWindow(QMainWindow):
             self._append_log("[GUI] Settings saved")
             
     def _open_roi_editor(self):
-        """Open Visual ROI Editor."""
         self._append_log("[GUI] Opening HUD Editor...")
         
         p = multiprocessing.Process(target=show_roi_editor, daemon=True)
         p.start()
     
     def _toggle_background(self, checked: bool):
-        """Toggle background image."""
         if checked:
             bg_path = resource_path('maskot2.png')
             
@@ -368,7 +364,6 @@ class MainWindow(QMainWindow):
                     QLabel#statusLabel {
                         background-color: rgba(0, 0, 0, 40);
                     }
-                    /* Keep buttons visible but maybe slightly translucent or styled */
                 """
                 
                 self.setStyleSheet(f"""
@@ -396,7 +391,6 @@ class MainWindow(QMainWindow):
         
     @pyqtSlot()
     def _on_start_clicked(self):
-        """Handle start button click."""
         if self.worker is None:
             self.worker = BotWorker(self._settings)
             self.worker.state_changed.connect(self._on_state_changed)

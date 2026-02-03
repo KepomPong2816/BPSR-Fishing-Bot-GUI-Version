@@ -19,5 +19,4 @@ TEMPLATES_PATH = ASSETS_DIR / "templates"
 USER_ROIS_PATH = EXTERNAL_BASE / "user_rois.json"
 
 def get_user_rois_path(width: int, height: int) -> Path:
-    """Get per-resolution user ROIs file path."""
     return EXTERNAL_BASE / f"user_rois_{width}x{height}.json"

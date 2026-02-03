@@ -121,7 +121,6 @@ class SettingsDialog(QDialog):
         self.height_spinbox.setEnabled(is_custom)
     
     def _apply_current_settings(self):
-        """Apply current settings to the dialog."""
         if not self._current_settings:
             return
             
