@@ -1,17 +1,48 @@
 import sys
 import multiprocessing
+
+if sys.platform == 'win32':
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception:
+        pass
+
+import os
+os.environ['QT_ENABLE_HIGHDPI_SCALING'] = '0'
+os.environ['QT_SCALE_FACTOR'] = '1'
+
 from PyQt6.QtWidgets import QApplication, QWidget
-from PyQt6.QtGui import QPainter, QColor, QPen, QFont
+from PyQt6.QtGui import QPainter, QColor, QPen, QFont, QGuiApplication
 from PyQt6.QtCore import Qt, QRect, QPoint
 
 from src.fishbot.config.detection_config import DetectionConfig
-from src.fishbot.config.screen_config import ScreenConfig
+
 
 class InteractiveROIEditor(QWidget):
-    def __init__(self):
+    def __init__(self, monitor_index: int = 0):
         super().__init__()
+        
+        screens = QGuiApplication.screens()
+        if monitor_index < len(screens):
+            screen = screens[monitor_index]
+        else:
+            screen = screens[0] if screens else None
+        
+        if screen:
+            geom = screen.geometry()
+            self.screen_width = geom.width()
+            self.screen_height = geom.height()
+            self.screen_left = geom.x()
+            self.screen_top = geom.y()
+        else:
+            self.screen_width = 1920
+            self.screen_height = 1080
+            self.screen_left = 0
+            self.screen_top = 0
+        
         self.detection_config = DetectionConfig()
-        self.screen_config = ScreenConfig()
+        self.detection_config.update_resolution(self.screen_width, self.screen_height)
         
         self.cached_user_rois = self.detection_config.load_user_rois()
         
@@ -31,48 +62,54 @@ class InteractiveROIEditor(QWidget):
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setMouseTracking(True)
-        self.showFullScreen()
         
-        print("[ROI EDITOR] Editor opened. Click any ROI to select, drag to move, resize from edges.")
+        if screen:
+            self.setGeometry(screen.geometry())
+            self.setScreen(screen)
+        
+        print(f"[ROI EDITOR] Editor opened on Monitor {monitor_index + 1}")
+        print(f"[ROI EDITOR] Resolution: {self.screen_width}x{self.screen_height}")
+        print("[ROI EDITOR] Click any ROI to select, drag to move, resize from edges.")
         print("[ROI EDITOR] Press ESC to close and save all changes.")
         
     def _load_all_rois(self):
         for name, roi in self.detection_config.rois.items():
             if roi:
                 x, y, w, h = roi
-                sx = int(x + self.screen_config.monitor_x)
-                sy = int(y + self.screen_config.monitor_y)
-                self.roi_rects[name] = QRect(sx, sy, int(w), int(h))
+                self.roi_rects[name] = QRect(int(x), int(y), int(w), int(h))
                 
     def _save_roi(self, name):
         if name not in self.roi_rects:
             return
             
         rect = self.roi_rects[name]
-        rel_x = rect.x() - self.screen_config.monitor_x
-        rel_y = rect.y() - self.screen_config.monitor_y
-        rel_w = rect.width()
-        rel_h = rect.height()
+        x = rect.x()
+        y = rect.y()
+        w = rect.width()
+        h = rect.height()
         
-        self.cached_user_rois[name] = [rel_x, rel_y, rel_w, rel_h]
+        self.cached_user_rois[name] = [x, y, w, h]
         self.detection_config.save_user_rois(self.cached_user_rois)
-        self.detection_config.rois[name] = (rel_x, rel_y, rel_w, rel_h)
+        self.detection_config.rois[name] = (x, y, w, h)
         
-        print(f"[ROI EDITOR] 💾 Saved '{name}': [{rel_x}, {rel_y}, {rel_w}, {rel_h}]")
+        print(f"[ROI EDITOR] 💾 Saved '{name}': [{x}, {y}, {w}, {h}]")
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 180))
-        
-        res_w, res_h = self.detection_config.get_current_resolution()
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 100))
         
         painter.setPen(QColor(255, 255, 255))
         painter.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-        painter.drawText(20, 40, f"📐 ROI Editor [{res_w}x{res_h}] - Click any box to select, drag to move, resize from edges")
+        painter.drawText(20, 40, f"📐 ROI Editor [{self.screen_width}x{self.screen_height}]")
         painter.setFont(QFont("Arial", 12))
-        painter.drawText(20, 65, f"Config file: user_rois_{res_w}x{res_h}.json | Press ESC to close and save")
+        painter.drawText(20, 65, f"Config: user_rois_{self.screen_width}x{self.screen_height}.json | Press ESC to close")
+        
+        if not self.roi_rects:
+            painter.setPen(QColor(255, 200, 0))
+            painter.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+            painter.drawText(20, 120, "⚠️ No ROIs loaded")
         
         for name, rect in self.roi_rects.items():
             is_selected = name == self.selected_roi
@@ -217,15 +254,17 @@ class InteractiveROIEditor(QWidget):
             self.close()
             QApplication.instance().quit()
 
-def main():
+
+def main(monitor_index: int = 0):
     print("Starting Interactive ROI Editor...")
     print("Click any ROI to select, drag to move, resize from edges.")
     print("Press ESC to close.")
     
     app = QApplication(sys.argv)
-    editor = InteractiveROIEditor()
-    editor.show()
+    editor = InteractiveROIEditor(monitor_index=monitor_index)
+    editor.showFullScreen()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()

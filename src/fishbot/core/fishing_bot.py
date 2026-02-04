@@ -13,7 +13,9 @@ from src.fishbot.core.state.impl.waiting_for_bite_state import WaitingForBiteSta
 from src.fishbot.core.state.state_machine import StateMachine
 from src.fishbot.core.state.state_type import StateType
 from src.fishbot.core.stats import StatsTracker
-from src.fishbot.utils.logger import log
+from src.fishbot.utils.logger import log, set_debug_mode
+from src.fishbot.utils.config_watcher import ConfigWatcher
+from src.fishbot.config.paths import get_user_rois_path
 
 
 class FishingBot:
@@ -26,7 +28,8 @@ class FishingBot:
         self.stats = StatsTracker()
         self.log = log
 
-        self.detector = Detector(self.config)
+        use_async = getattr(self.config.bot, 'async_capture_enabled', True)
+        self.detector = Detector(self.config, use_async=use_async)
         self.controller = GameController(self.config)
         self.state_machine = StateMachine(self)
 
@@ -35,6 +38,7 @@ class FishingBot:
         self._stopped = False
         self.debug_mode = self.config.bot.debug_mode
         
+        set_debug_mode(self.debug_mode)
         self.controller.set_debug(self.debug_mode)
 
         self.target_delay = 0
@@ -42,6 +46,31 @@ class FishingBot:
             self.target_delay = 1.0 / self.config.bot.target_fps
 
         self._register_states()
+        
+        self._config_watcher = None
+        self._setup_config_watcher()
+
+    def _setup_config_watcher(self):
+        try:
+            width, height = self.config.bot.detection.get_current_resolution()
+            rois_path = get_user_rois_path(width, height)
+            
+            self._config_watcher = ConfigWatcher(
+                file_path=rois_path,
+                callback=self._on_config_changed,
+                poll_interval=2.0
+            )
+            self._config_watcher.start()
+            log("[BOT] Config hot reload enabled")
+        except Exception as e:
+            log(f"[BOT] Config watcher failed: {e}")
+
+    def _on_config_changed(self):
+        try:
+            self.config.bot.detection.reload_config()
+            log("[BOT] ⚡ ROI config reloaded")
+        except Exception as e:
+            log(f"[BOT] Config reload error: {e}")
 
     def _register_states(self):
         self.state_machine.add_state(StateType.STARTING, StartingState(self))
@@ -88,6 +117,14 @@ class FishingBot:
         if not self._stopped:
             self.log("[BOT] 🛑 Shutting down the bot...")
             self._stopped = True
+
+            if self._config_watcher:
+                self._config_watcher.stop()
+
+            try:
+                self.detector.cleanup()
+            except Exception as e:
+                self.log(f"[ERROR] Failed to cleanup detector: {e}")
 
             try:
                 self.controller.release_all_controls()

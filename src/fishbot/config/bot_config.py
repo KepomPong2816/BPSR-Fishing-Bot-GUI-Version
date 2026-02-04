@@ -1,6 +1,7 @@
 from .screen_config import ScreenConfig
 from .detection_config import DetectionConfig
 
+
 class BotConfig:
     def __init__(self, window_mode: str = 'Auto Detect', custom_width: int = 1920, custom_height: int = 1080):
         self.detection = DetectionConfig()
@@ -23,9 +24,19 @@ class BotConfig:
 
         self.quick_finish_enabled = False
         self.debug_mode = False
+        self.file_logging_enabled = False
 
         self.target_fps = 60
 
         self.default_delay = 0.3
         self.finish_wait_delay = 0.3
         self.casting_delay = 0.3
+        
+        self.session_time_limit = 0
+        
+        self.async_capture_enabled = True
+        
+        self.retry_max_attempts = 3
+        self.retry_base_delay = 0.5
+        
+        self.selected_monitor = 0

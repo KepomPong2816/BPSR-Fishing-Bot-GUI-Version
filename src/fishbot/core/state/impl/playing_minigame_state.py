@@ -2,6 +2,7 @@ import time
 
 from ..bot_state import BotState
 from ..state_type import StateType
+from src.fishbot.utils.retry_handler import RetryHandler
 
 
 class PlayingMinigameState(BotState):
@@ -10,6 +11,12 @@ class PlayingMinigameState(BotState):
         super().__init__(bot)
         self._current_direction = None
         self.switch_delay = 0.5
+        self._retry_handler = RetryHandler(
+            max_retries=3,
+            base_delay=0.3,
+            max_delay=2.0,
+            exponential=True
+        )
 
     def _handle_arrow(self, direction, screen):
         arrow_template = f"{direction}_arrow"
@@ -29,6 +36,33 @@ class PlayingMinigameState(BotState):
                 self.controller.key_up(key_to_release)
                 self._current_direction = None
                 time.sleep(self.switch_delay)
+
+    def _click_continue_with_retry(self, screen) -> bool:
+        continue_pos = self.detector.find(screen, "continue", 5, debug=False)
+        if continue_pos:
+            def try_click():
+                self.controller.click_at(continue_pos[0], continue_pos[1])
+                time.sleep(0.3)
+                new_screen = self.detector.capture_screen()
+                return new_screen
+            
+            def check_success(new_screen):
+                if new_screen is None:
+                    return False
+                return self.detector.find(new_screen, "continue", 5, debug=False) is None
+            
+            def on_retry(attempt, delay):
+                self.bot.log(f"[MINIGAME] ⏳ Retry click #{attempt} (wait {delay:.1f}s)")
+            
+            result = self._retry_handler.execute(
+                func=try_click,
+                success_check=check_success,
+                on_retry=on_retry
+            )
+            
+            return result is not None
+        
+        return False
 
     def handle(self, screen):
         fish_complete = 0

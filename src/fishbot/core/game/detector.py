@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from typing import Optional
 
 from src.fishbot.utils.logger import log
 
@@ -10,13 +11,18 @@ except ImportError:
     log("[ERROR] The bot cannot run without MSS.")
     exit(1)
 
+
 class Detector:
-    def __init__(self, config):
+    BASE_WIDTH = 1920
+    BASE_HEIGHT = 1080
+    
+    def __init__(self, config, use_async: bool = True):
         self.unified_config = config
         self.detection_config = config.bot.detection
         self.screen_config = config.bot.screen
 
         self.templates = self._load_templates()
+        self.scaled_templates = {}
         self.sct = None
         self.monitor = {
             'left': self.screen_config.monitor_x,
@@ -24,6 +30,77 @@ class Detector:
             'width': self.screen_config.monitor_width,
             'height': self.screen_config.monitor_height
         }
+        
+        self._scale_templates()
+        
+        self._use_async = use_async
+        self._async_capture = None
+        
+        if self._use_async:
+            self._init_async_capture()
+
+    def _init_async_capture(self):
+        try:
+            from src.fishbot.utils.async_capture import AsyncScreenCapture
+            self._async_capture = AsyncScreenCapture(
+                monitor=self.monitor,
+                fps=self.unified_config.bot.target_fps or 30
+            )
+            self._async_capture.start()
+            log("[INFO] ✅ Async screen capture enabled")
+        except Exception as e:
+            log(f"[WARNING] Async capture failed, using sync: {e}")
+            self._use_async = False
+            self._async_capture = None
+
+    def _scale_templates(self):
+        scale_x = self.screen_config.monitor_width / self.BASE_WIDTH
+        scale_y = self.screen_config.monitor_height / self.BASE_HEIGHT
+        
+        # Check if scaling is needed (strict tolerance)
+        if abs(scale_x - 1.0) < 0.01 and abs(scale_y - 1.0) < 0.01:
+            self.scaled_templates = self.templates.copy()
+            log(f"[INFO] Templates at base resolution (1920x1080)")
+            return
+        
+        log(f"[INFO] Scaling templates for {self.screen_config.monitor_width}x{self.screen_config.monitor_height} (scale: {scale_x:.3f}x, {scale_y:.3f}y)")
+        
+        for name, (template_img, mask) in self.templates.items():
+            # Use separate scaling factors for width and height
+            new_w = int(template_img.shape[1] * scale_x)
+            new_h = int(template_img.shape[0] * scale_y)
+            
+            # Safety check for very small dimensions
+            if new_w < 4 or new_h < 4:
+                log(f"[WARNING] Template '{name}' too small after scaling ({new_w}x{new_h}), using original.")
+                self.scaled_templates[name] = (template_img, mask)
+                continue
+            
+            # Use INTER_AREA for shrinking (better quality), INTER_LINEAR for enlarging
+            interpolation = cv.INTER_AREA if (scale_x < 1.0 or scale_y < 1.0) else cv.INTER_LINEAR
+            
+            scaled_template = cv.resize(template_img, (new_w, new_h), interpolation=interpolation)
+            
+            scaled_mask = None
+            if mask is not None:
+                scaled_mask = cv.resize(mask, (new_w, new_h), interpolation=interpolation)
+            
+            self.scaled_templates[name] = (scaled_template, scaled_mask)
+        
+        log(f"[INFO] ✅ Scaled {len(self.scaled_templates)} templates")
+
+    def update_monitor(self, monitor: dict):
+        self.monitor = monitor
+        if self._async_capture:
+            self._async_capture.update_monitor(monitor)
+
+    def cleanup(self):
+        if self._async_capture:
+            self._async_capture.stop()
+            self._async_capture = None
+        if self.sct:
+            self.sct.close()
+            self.sct = None
 
     def _load_templates(self):
         loaded = {}
@@ -59,10 +136,15 @@ class Detector:
             for y in range(center_y - r + 1, center_y + r):
                 yield center_x + r, y
 
-    def capture_screen(self):
+    def capture_screen(self) -> Optional[np.ndarray]:
+        if self._use_async and self._async_capture:
+            frame = self._async_capture.get_latest_frame()
+            if frame is not None:
+                return frame
+        
         if self.sct is None:
             self.sct = mss.mss()
-            log("[INFO] ✅ MSS initialized in bot thread")
+            log(f"[INFO] ✅ MSS initialized. Monitor: {self.monitor}")
 
         screenshot = self.sct.grab(self.monitor)
         img = np.array(screenshot)
@@ -83,7 +165,7 @@ class Detector:
         if confidence is None:
             return None
         
-        precision = self.detection_config.precision
+        precision = self.detection_config.get_precision_for_template(template_name)
         is_match = confidence >= precision
 
         if debug and confidence >= .3:
@@ -91,12 +173,19 @@ class Detector:
             log(f"[DEBUG] [{template_name}] at ({x}, {y}) Confidence: {confidence:.2%} (required: {precision:.0%}) -> {status}")
 
         if is_match:
+            self.detection_config.record_detection_result(template_name, True, confidence)
             return self._calculate_center(location, template_img.shape[:2], (x, y))
+        else:
+            if confidence >= 0.3:
+                self.detection_config.record_detection_result(template_name, False, confidence)
 
         return None
 
     def _get_search_area(self, screen, template_name, radius, debug):
-        template_data = self.templates[template_name]
+        template_data = self.scaled_templates.get(template_name, self.templates.get(template_name))
+        if not template_data:
+            return None
+            
         template_img, _ = template_data
 
         roi_config = self.detection_config.rois.get(template_name)

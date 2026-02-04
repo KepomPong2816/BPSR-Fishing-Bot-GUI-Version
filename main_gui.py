@@ -1,6 +1,19 @@
 import sys
 import os
 
+if sys.platform == 'win32':
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
+os.environ['QT_ENABLE_HIGHDPI_SCALING'] = '0'
+os.environ['QT_SCALE_FACTOR'] = '1'
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def check_admin():

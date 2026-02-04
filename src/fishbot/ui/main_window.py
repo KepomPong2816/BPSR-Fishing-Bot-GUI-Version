@@ -22,8 +22,8 @@ class StatCard(QFrame):
         
         layout = QHBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(8)
-        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(4)
+        layout.setContentsMargins(8, 6, 8, 6)
         
         self.value_label = QLabel("0")
         self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -40,26 +40,29 @@ class StatCard(QFrame):
                 border: 1px solid {COLORS['border']};
             }}
             QFrame#statCard QLabel {{
-                font-size: 13px;
+                font-size: 12px;
                 color: {COLORS['text_primary']};
             }}
         """)
         self.value_label.setStyleSheet(f"""
             QLabel {{
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: bold;
                 color: {COLORS['accent']};
             }}
         """)
         self.text_label.setStyleSheet(f"""
             QLabel {{
-                font-size: 11px;
+                font-size: 10px;
                 color: {COLORS['text_secondary']};
             }}
         """)
     
-    def set_value(self, value: int):
-        self.value_label.setText(str(value))
+    def set_value(self, value):
+        if isinstance(value, float):
+            self.value_label.setText(f"{value:.1f}")
+        else:
+            self.value_label.setText(str(value))
 
 
 class MainWindow(QMainWindow):    
@@ -86,20 +89,23 @@ class MainWindow(QMainWindow):
     
     def _default_settings(self) -> dict:
         return {
+            'selected_monitor': 0,
             'window_mode': 'Auto Detect',
             'custom_width': 1920,
             'custom_height': 1080,
             'target_fps': 60,
             'precision': 0.65,
+            'session_time_limit': 0,
             'quick_finish': False,
             'debug_mode': False,
+            'file_logging_enabled': False,
             'hotkeys_enabled': True,
         }
         
     def _setup_ui(self):
-        self.setWindowTitle("iBal the Finisher V 1.0")
-        self.setMinimumSize(420, 550)
-        self.resize(450, 600)
+        self.setWindowTitle("iBal the Finisher V 2.0")
+        self.setMinimumSize(480, 600)
+        self.resize(500, 650)
         self.setStyleSheet(MAIN_STYLESHEET)
         
         central_widget = QWidget()
@@ -112,7 +118,7 @@ class MainWindow(QMainWindow):
         header_layout = QHBoxLayout()
         header_layout.setSpacing(5)
         
-        title_label = QLabel("Untuk Lord Firzha V 1.0")
+        title_label = QLabel("Untuk Lord Firzha V 2.0")
         title_label.setStyleSheet(f"font-size: 14px; font-weight: bold; color: {COLORS['accent']};")
         header_layout.addWidget(title_label)
         
@@ -189,28 +195,44 @@ class MainWindow(QMainWindow):
         self.status_label.setStyleSheet(get_status_style('READY'))
         status_layout.addWidget(self.status_label)
         
+        timer_row = QHBoxLayout()
+        timer_row.setSpacing(15)
+        
         self.timer_label = QLabel("⏱️ 00:00:00")
         self.timer_label.setObjectName("timerLabel")
         self.timer_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.timer_label.setStyleSheet(f"font-size: 14px; color: {COLORS['text_secondary']};")
-        status_layout.addWidget(self.timer_label)
+        timer_row.addWidget(self.timer_label)
         
-        stats_layout = QHBoxLayout()
-        stats_layout.setSpacing(8)
+        self.session_limit_label = QLabel("")
+        self.session_limit_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.session_limit_label.setStyleSheet(f"font-size: 12px; color: {COLORS['text_secondary']};")
+        timer_row.addWidget(self.session_limit_label)
+        
+        status_layout.addLayout(timer_row)
+        
+        stats_layout = QGridLayout()
+        stats_layout.setSpacing(6)
         
         self.stat_cards = {}
         
         self.stat_cards['fish_caught'] = StatCard("🐟", "Caught")
-        stats_layout.addWidget(self.stat_cards['fish_caught'])
+        stats_layout.addWidget(self.stat_cards['fish_caught'], 0, 0)
         
         self.stat_cards['fish_escaped'] = StatCard("💨", "Escaped")
-        stats_layout.addWidget(self.stat_cards['fish_escaped'])
+        stats_layout.addWidget(self.stat_cards['fish_escaped'], 0, 1)
+        
+        self.stat_cards['catch_rate'] = StatCard("📈", "Rate%")
+        stats_layout.addWidget(self.stat_cards['catch_rate'], 0, 2)
+        
+        self.stat_cards['fish_per_hour'] = StatCard("⚡", "F/H")
+        stats_layout.addWidget(self.stat_cards['fish_per_hour'], 1, 0)
         
         self.stat_cards['rod_breaks'] = StatCard("🔧", "Rods")
-        stats_layout.addWidget(self.stat_cards['rod_breaks'])
+        stats_layout.addWidget(self.stat_cards['rod_breaks'], 1, 1)
         
         self.stat_cards['timeouts'] = StatCard("⏱️", "T/O")
-        stats_layout.addWidget(self.stat_cards['timeouts'])
+        stats_layout.addWidget(self.stat_cards['timeouts'], 1, 2)
         
         status_layout.addLayout(stats_layout)
         
@@ -333,9 +355,10 @@ class MainWindow(QMainWindow):
             self._append_log("[GUI] Settings saved")
             
     def _open_roi_editor(self):
-        self._append_log("[GUI] Opening HUD Editor...")
+        monitor_index = self._settings.get('selected_monitor', 0)
+        self._append_log(f"[GUI] Opening HUD Editor on Monitor {monitor_index + 1}...")
         
-        p = multiprocessing.Process(target=show_roi_editor, daemon=True)
+        p = multiprocessing.Process(target=show_roi_editor, args=(monitor_index,), daemon=True)
         p.start()
     
     def _toggle_background(self, checked: bool):
@@ -398,6 +421,7 @@ class MainWindow(QMainWindow):
             self.worker.log_message.connect(self._append_log)
             self.worker.bot_stopped.connect(self._on_bot_stopped)
             self.worker.bot_error.connect(self._on_bot_error)
+            self.worker.session_limit_reached.connect(self._on_session_limit_reached)
             
             self.worker.start()
             self.timer.start_timer()
@@ -405,6 +429,12 @@ class MainWindow(QMainWindow):
             self.start_button.setEnabled(False)
             self.stop_button.setEnabled(True)
             self.settings_btn.setEnabled(False)
+            
+            session_limit = self._settings.get('session_time_limit', 0)
+            if session_limit > 0:
+                self.session_limit_label.setText(f"⏳ Limit: {session_limit}m")
+            else:
+                self.session_limit_label.setText("")
             
             self._append_log("[GUI] 🚀 Bot started!")
             
@@ -427,6 +457,12 @@ class MainWindow(QMainWindow):
         self.status_label.setText("STOPPED")
         self.status_label.setStyleSheet(get_status_style('STOPPED'))
         self._reset_ui(stopped=True)
+    
+    @pyqtSlot()
+    def _on_session_limit_reached(self):
+        self._append_log("[GUI] ⏱️ Session limit reached! Auto-stopping...")
+        QMessageBox.information(self, "Session Limit", "Session time limit reached. Bot has stopped.")
+        self._on_stop_clicked()
     
     @pyqtSlot(str)
     def _on_state_changed(self, state: str):
@@ -499,6 +535,10 @@ class MainWindow(QMainWindow):
         self.timer.stop_timer()
         self.timer.reset_timer()
         self.timer_label.setText("⏱️ 00:00:00")
+        self.session_limit_label.setText("")
+        
+        for key in self.stat_cards:
+            self.stat_cards[key].set_value(0)
         
         if not stopped:
             self.status_label.setText("READY")
